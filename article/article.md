@@ -27,7 +27,22 @@ Now, you might wonder, when do we reject or accept a hypothesis? We use a statis
 |P-value < 0.01 (<1%)|No (Very significant)|
 |P-value < 0.001 (<0.1%)|No (Highly significant)|
 
-**Note**: In practice with a limited amount of data, the significance level can sometimes be useful when set to below 0.1 (10%). This is however not something that should be used for reporting truths, but for practical purposes for deciding a cutoff point in two lists of values.
+**Note**: In practice with a limited amount of data, the significance level can sometimes be useful when set to below 0.1 (10%). This is however something that you should use carefully and only for practical purposes. For example, deciding a cutoff point in two lists of values.
 
 ## How To Test For Statistical Significance In Python
 
+The sole purpose of showing how to do statistical significance testing in Python is to show you exactly how practical they can be. 
+
+Explain: parametric vs non-parametric, one sample vs two sample
+https://towardsdatascience.com/hypothesis-tests-explained-8a070636bd28
+
+### Determining the distribution
+Useful to know which tests can be applied because most tests have a series of assumptions that might as well be seen as requirements to use the test.
+
+### Checking for redundancy
+The amount of signal power in your dataset can sometimes be hard to comprehend. You can check which features are redundant by applying correlation tests.
+
+### Finding a cutoff point
+Perhaps this is what I have found most useful in my work. It is almost like a statistical way of finding outliers that does not require you to train a model. Using clustering algorithms can also help, but they add additional complexity which we do not need.
+
+Levene's test vs ANOVA
