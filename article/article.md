@@ -42,7 +42,21 @@ Useful to know which tests can be applied because most tests have a series of as
 ### Checking for redundancy
 The amount of signal power in your dataset can sometimes be hard to comprehend. You can check which features are redundant by applying correlation tests.
 
+#### Feature vs Feature
+Comparing two columns
+
+#### Linear Regression Example
+Comparing coefficients
+
 ### Finding a cutoff point
 Perhaps this is what I have found most useful in my work. It is almost like a statistical way of finding outliers that does not require you to train a model. Using clustering algorithms can also help, but they add additional complexity which we do not need.
 
 Levene's test vs ANOVA
+
+ANOVA F statistic equation:
+
+$$
+{\displaystyle W={\frac {(N-k)}{(k-1)}}\cdot {\frac {\sum _{i=1}^{k}N_{i}(Z_{i\cdot }-Z_{\cdot \cdot })^{2}}{\sum _{i=1}^{k}\sum _{j=1}^{N_{i}}(Z_{ij}-Z_{i\cdot })^{2}}},}
+$$
+
+Equation is not too complicated..
