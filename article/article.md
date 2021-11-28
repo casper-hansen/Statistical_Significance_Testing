@@ -31,13 +31,38 @@ Now, you might wonder, when do we reject or accept a hypothesis? We use a statis
 
 ## How To Test For Statistical Significance In Python
 
-The sole purpose of showing how to do statistical significance testing in Python is to show you exactly how practical they can be. 
+The sole purpose of showing how to do statistical significance testing in Python is to show you exactly how practical they can be. We will be looking at a [diabetes dataset from Kaggle](https://www.kaggle.com/uciml/pima-indians-diabetes-database) to run a series of statistical tests in Python. All the code can be found on my [GitHub page](https://github.com/casperbh96/Statistical_Significance_Testing) We start by loading the dataset and creating a new feature:
 
-Explain: parametric vs non-parametric, one sample vs two sample
-https://towardsdatascience.com/hypothesis-tests-explained-8a070636bd28
+```python
+df = pd.read_csv('data/diabetes.csv')
+df["OldOverweight"] = df.apply(lambda x: True if x.Age >= 50 and x.BMI >= 25.0 else False, axis=1)
+```
 
 ### Determining the distribution
-Useful to know which tests can be applied because most tests have a series of assumptions that might as well be seen as requirements to use the test.
+Many statistical tests have a series of assumptions. One of the most common assumption is that the data being tested follow a Gaussian distribution (also known as a normal distribution or test for normality). Therefore, it would not make much sense to use those tests on the data that do not follow a Gaussian distribution - so, this is the first test.
+
+We will work with SciPy as the main package for the implementation of the statistical tests for normality. The API makes it simple and fast to perform these statistical tests. In the code snippet below, we make use of two different normality tests - Shapiro-Wilk and D'Agostino:
+
+```python
+def gaussian_test(col, values):
+    stat1, p1 = stats.shapiro(values)
+    stat2, p2 = stats.normaltest(values)
+
+    print(f"Gaussian: {col}\n\t{p1:5f} (Shapiro-Wilk)\n\t{p2:5f} (D'Agostino's)")
+```
+
+You can run through every column and check the if the values fit into a Gaussian distribution. I found that all the p-values for the Shapiro-Wilk test were zero - suggesting that the every column is normally distributed. Applying the D'Agostino test, the result is largely the same except for a few columns that got close to the 0.001 significance level. This can be observed by the output of the function:
+
+```
+Gaussian: Glucose
+        0.000000 (Shapiro-Wilk)
+        0.002045 (D'Agostino's)
+Gaussian: SkinThickness
+        0.000000 (Shapiro-Wilk)
+        0.000171 (D'Agostino's)
+```
+
+This means all the data pass the requirements of being normally distributed since no feature had a p-value above the significance level at 0.05. Furthermore, this means we can use *parametric tests* like T tests and Pearsons Correlation Coefficient. This does not mean we cannot use non-parametric tests - these tests are distribution-free. See [this page](https://www.ibm.com/docs/en/db2woc?topic=procedures-statistics-parametric-nonparametric) for more information about parametric and non-parametric tests.
 
 ### Checking for redundancy
 The amount of signal power in your dataset can sometimes be hard to comprehend. You can check which features are redundant by applying correlation tests.
