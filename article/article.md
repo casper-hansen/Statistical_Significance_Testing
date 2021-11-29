@@ -41,6 +41,9 @@ df["OldOverweight"] = df.apply(lambda x: True if x.Age >= 50 and x.BMI >= 25.0 e
 ### Determining the distribution
 Many statistical tests have a series of assumptions. One of the most common assumption is that the data being tested follow a Gaussian distribution (also known as a normal distribution or test for normality). Therefore, it would not make much sense to use those tests on the data that do not follow a Gaussian distribution - so, this is the first test.
 
+![](images/gaussian.png)
+A Gaussian distribution where $\mu$ is the mean and $\sigma$ is the standard deviation. In the Gaussian distribution, 68.26% of data falls within one standard deviation from the mean. [Image source](https://towardsdatascience.com/understanding-the-68-95-99-7-rule-for-a-normal-distribution-b7b7cbf760c2).
+
 We will work with SciPy as the main package for the implementation of the statistical tests for normality. The API makes it simple and fast to perform these statistical tests. In the code snippet below, we make use of two different normality tests - Shapiro-Wilk and D'Agostino:
 
 ```python
@@ -62,13 +65,42 @@ Gaussian: SkinThickness
         0.000171 (D'Agostino's)
 ```
 
-This means all the data pass the requirements of being normally distributed since no feature had a p-value above the significance level at 0.05. Furthermore, this means we can use *parametric tests* like T tests and Pearsons Correlation Coefficient. This does not mean we cannot use non-parametric tests - these tests are distribution-free. See [this page](https://www.ibm.com/docs/en/db2woc?topic=procedures-statistics-parametric-nonparametric) for more information about parametric and non-parametric tests.
+This means all the data pass the requirements of being normally distributed since no feature had a p-value above the significance level at 0.05. Furthermore, this means we can use *parametric tests* like T tests and Pearson's Correlation Coefficient. This does not mean we cannot use non-parametric tests - these tests are distribution-free. See [this page](https://www.ibm.com/docs/en/db2woc?topic=procedures-statistics-parametric-nonparametric) for more information about parametric and non-parametric tests.
 
 ### Checking for redundancy
-The amount of signal power in your dataset can sometimes be hard to comprehend. You can check which features are redundant by applying correlation tests.
+The amount of signal power in your dataset can sometimes be hard to comprehend. You can check which features are redundant by applying correlation tests. 
 
-#### Feature vs Feature
-Comparing two columns
+**Pearson's test**: We are testing whether two features have a linear relationship - meaning that if feature X increases or decreases by a value Z, then Y increases or decreases just as much as X. 
+
+**Spearman's test**: We are testing whether two features have a monotonic relationship - meaning when feature X changes in a positive or negative direction, so does feature Y, but not necessarily by the same value. For example, if feature X is decreasing by -1.5 while feature Y is decreasing with -0.2.
+
+When executing our script to check Pearson's Correlation Coefficient and Spearman's rank correlation coefficient, we apply the `stats.pearsonr` and `stats.spearmanr` methods from SciPy. We can execute both methods by the function below. In return, we get the P values values for the correlation test on every feature permutation - i.e. for all features, we run a correlation test versus the rest of the features:
+
+```python
+def correlation_test(df):
+    pearson = df.corr(method=lambda x, y: stats.pearsonr(x, y)[1])
+    spearman = df.corr(method=lambda x, y: stats.spearmanr(x, y)[1])
+
+    pearson = pearson.round(4)
+    spearman = spearman.round(4)
+
+    return pearson, spearman
+```
+
+After we have calculated the correlations, we are left with a correlation map for each test. We use the Seaborn Python package to visualize them as a heatmap:
+
+```python
+def save_correlation_map(correlation_map, save_name):
+    plt.figure(figsize=(12, 6))
+    sns.heatmap(correlation_map, annot=True)
+    plt.savefig(save_name, dpi=300, bbox_inches='tight')
+```
+
+As a result we get two heatmaps, one for Pearson's test and one for Spearman's test:
+
+![](images/heatmap_pearson.png)
+
+![](images/heatmap_spearman.png)
 
 #### Linear Regression Example
 Comparing coefficients
