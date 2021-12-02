@@ -13,6 +13,6 @@ def distribution_test(df):
 def correlation_test(df):
     pearson, spearman = significance.correlation_test(df)
 
-    utils.save_correlation_map(pearson, 'heatmap_pearson.png')
-    utils.save_correlation_map(spearman, 'heatmap_spearman.png')
+    utils.save_correlation_map(pearson, 'heatmap_pearson.png', title="Pearson's Correlation")
+    utils.save_correlation_map(spearman, 'heatmap_spearman.png', title="Spearman's Correlation")
 
