@@ -68,7 +68,7 @@ Gaussian: SkinThickness
 This means all the data pass the requirements of being normally distributed since no feature had a p-value above the significance level at 0.05. Furthermore, this means we can use *parametric tests* like T tests and Pearson's Correlation Coefficient. This does not mean we cannot use non-parametric tests - these tests are distribution-free. See [this page](https://www.ibm.com/docs/en/db2woc?topic=procedures-statistics-parametric-nonparametric) for more information about parametric and non-parametric tests.
 
 ### Checking for redundancy
-The amount of signal power in your dataset can sometimes be hard to comprehend. You can check which features are redundant by applying correlation tests. 
+The amount of correlation in your dataset can sometimes be hard to comprehend. You can check which features are redundant by applying correlation tests.
 
 **Pearson's test**: We are testing whether two features have a linear relationship - meaning that if feature X increases or decreases by a value Z, then Y increases or decreases just as much as X. 
 
@@ -90,30 +90,49 @@ def correlation_test(df):
 After we have calculated the correlations, we are left with a correlation map for each test. We use the Seaborn Python package to visualize them as a heatmap:
 
 ```python
-def save_correlation_map(correlation_map, save_name):
+def save_correlation_map(correlation_map, save_name, title):
     plt.figure(figsize=(12, 6))
     sns.heatmap(correlation_map, annot=True)
+    plt.title(title, fontsize=20)
     plt.savefig(save_name, dpi=300, bbox_inches='tight')
 ```
 
-As a result we get two heatmaps, one for Pearson's test and one for Spearman's test:
+As a result we get two heatmaps, one for Pearson's test and one for Spearman's test.
+
+Inspecting the Pearson's correlation plot of p-values, we can quite clearly see tath BMI is correlating with Pregnanies and DiabetesPedigreeFunction. Basically, we are looking for anything above 0.05; any feature that has a p-value for correlation with another feature above 0.05 is found to be insignificantly different from the other feature.
 
 ![](images/heatmap_pearson.png)
+Pearson's correlation coefficient on the diabetes dataset.
+
+Inspecting Spearman's correlation, much of the same story is told, except for a few new features that are tremendously correlated with other features. Insulin and the constructed feature OldOverweight has an incredibly high p-value while the BMI and Pregnancies features increased to a p-value of 1. BloodPressure and Insulin also has a very large p-value.
 
 ![](images/heatmap_spearman.png)
+Spearman's correlation coefficient on the diabetes dataset.
 
-#### Linear Regression Example
-Comparing coefficients
+On a final note on correlation; making intuitive sense of a dataset is not always as easy as with our dataset for this article. We can quite clearly see that BMI and Pregnancies follow eachother linearly and monotonically - as expected. However, if you are working with sensor data where you cannot put your intuition on top quickly, then this becomes a tool to help you understand the sensor data faster.
 
 ### Finding a cutoff point
 Perhaps this is what I have found most useful in my work. It is almost like a statistical way of finding outliers that does not require you to train a model. Using clustering algorithms can also help, but they add additional complexity which we do not need.
 
 Levene's test vs ANOVA
 
-ANOVA F statistic equation:
+![](images/bold_text_test.png)
 
-$$
-{\displaystyle W={\frac {(N-k)}{(k-1)}}\cdot {\frac {\sum _{i=1}^{k}N_{i}(Z_{i\cdot }-Z_{\cdot \cdot })^{2}}{\sum _{i=1}^{k}\sum _{j=1}^{N_{i}}(Z_{ij}-Z_{i\cdot })^{2}}},}
-$$
+```python
+def bold_text():
+    img1 = cv2.imread('data/logo.png')
+    img2 = cv2.imread('data/heading.png')
+    img3 = cv2.imread('data/body.png')
 
-Equation is not too complicated..
+    bold1 = model.compute_thickness(img1)
+    bold2 = model.compute_thickness(img2)
+    bold3 = model.compute_thickness(img3)
+
+    rng = np.random.RandomState(42)
+    a_ton_of_text_boldness = rng.uniform(low=0.7, high=2.5, size=200)
+    np.append(a_ton_of_text_boldness, [bold1, bold2])
+
+    stat, p = levene(a_ton_of_text_boldness, [bold1, bold2], center='mean')
+    print(bold1, bold2, bold3)
+    print(f'{p:5f}')
+```

@@ -1,6 +1,6 @@
 import numpy as np
-import pandas as pd
 from scipy import stats
+from scipy.stats import levene, f_oneway
 
 def gaussian_test(col, values):
     stat1, p1 = stats.shapiro(values)
@@ -17,3 +17,16 @@ def correlation_test(df):
     spearman = spearman.round(4)
 
     return pearson, spearman
+
+def boldness_test(bold1, bold2, bold3):
+    rng = np.random.RandomState(42)
+    a_ton_of_text_boldness = rng.uniform(low=0.7, high=2.5, size=200)
+
+    variance_check = [[bold1, bold2], [bold2, bold3]]
+
+    for check in variance_check:
+        stat1, p1 = levene(a_ton_of_text_boldness, check, center='mean')
+        stat2, p2 = f_oneway(a_ton_of_text_boldness, check)
+
+        print(f'{p1:5f}')
+        print(f'{p2:5f}')
