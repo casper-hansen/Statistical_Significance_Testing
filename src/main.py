@@ -21,16 +21,6 @@ def correlation_test(df):
     utils.save_correlation_map(spearman, 'article/images/heatmap_spearman.png', title="Spearman's Correlation")
 
 
-def pregnancy_prediction(df):
-    x_features = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome', 'OldOverweight']
-    y_feature = 'Pregnancies'
-    
-    model.linear_regression_model(df, x_features, y_feature)
-
-    x_features = ['Age', 'Outcome', 'OldOverweight']
-    model.linear_regression_model(df, x_features, y_feature)
-
-
 def bold_text():
     img1 = cv2.imread('data/logo.png')
     img2 = cv2.imread('data/heading.png')
@@ -46,4 +36,6 @@ def bold_text():
     
 
 if __name__ == '__main__':
+    distribution_test()
+    correlation_test()
     bold_text()
