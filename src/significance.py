@@ -10,13 +10,16 @@ def gaussian_test(col, values):
 
 
 def correlation_test(df):
-    pearson = df.corr(method=lambda x, y: stats.pearsonr(x, y)[1])
-    spearman = df.corr(method=lambda x, y: stats.spearmanr(x, y)[1])
+    pearson_stat = df.corr(method=lambda x, y: stats.pearsonr(x, y)[0])
+    pearson_p = df.corr(method=lambda x, y: stats.pearsonr(x, y)[1])
+    spearman_stat = df.corr(method=lambda x, y: stats.spearmanr(x, y)[0])
+    spearman_p = df.corr(method=lambda x, y: stats.spearmanr(x, y)[1])
 
-    pearson = pearson.round(4)
-    spearman = spearman.round(4)
+    pearson_p = (pearson_p - np.eye(df.shape[1])).round(4)
+    spearman_p = (spearman_p - np.eye(df.shape[1])).round(4)
 
-    return pearson, spearman
+    return pearson_stat, pearson_p, spearman_stat, spearman_p
+
 
 def boldness_test(bold1, bold2, bold3):
     rng = np.random.RandomState(42)

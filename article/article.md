@@ -74,42 +74,80 @@ The amount of correlation in your dataset can sometimes be hard to comprehend. Y
 
 **Spearman's test**: We are testing whether two features have a monotonic relationship - meaning when feature X changes in a positive or negative direction, so does feature Y, but not necessarily by the same value. For example, if feature X is decreasing by -1.5 while feature Y is decreasing with -0.2.
 
-When executing our script to check Pearson's Correlation Coefficient and Spearman's rank correlation coefficient, we apply the `stats.pearsonr` and `stats.spearmanr` methods from SciPy. We can execute both methods by the function below. In return, we get the P values values for the correlation test on every feature permutation - i.e. for all features, we run a correlation test versus the rest of the features:
+When executing our script to check Pearson's Correlation Coefficient and Spearman's rank correlation coefficient, we apply the `stats.pearsonr` and `stats.spearmanr` methods from SciPy. We can execute both methods by the function below. In return, we get the coefficients and P-values for the correlation test on every feature combination:
 
 ```python
 def correlation_test(df):
-    pearson = df.corr(method=lambda x, y: stats.pearsonr(x, y)[1])
-    spearman = df.corr(method=lambda x, y: stats.spearmanr(x, y)[1])
+    pearson_stat = df.corr(method=lambda x, y: stats.pearsonr(x, y)[0])
+    pearson_p = df.corr(method=lambda x, y: stats.pearsonr(x, y)[1])
+    spearman_stat = df.corr(method=lambda x, y: stats.spearmanr(x, y)[0])
+    spearman_p = df.corr(method=lambda x, y: stats.spearmanr(x, y)[1])
 
-    pearson = pearson.round(4)
-    spearman = spearman.round(4)
+    pearson_p = (pearson_p - np.eye(df.shape[1])).round(4)
+    spearman_p = (spearman_p - np.eye(df.shape[1])).round(4)
 
-    return pearson, spearman
+    return pearson_stat, pearson_p, spearman_stat, spearman_p
 ```
 
-After we have calculated the correlations, we are left with a correlation map for each test. We use the Seaborn Python package to visualize them as a heatmap:
+After we have calculated the correlations and p-values, we are left with a correlation map for each test. We use the Seaborn Python package to visualize them as a heatmap:
 
 ```python
-def save_correlation_map(correlation_map, save_name, title):
-    plt.figure(figsize=(12, 6))
-    sns.heatmap(correlation_map, annot=True)
-    plt.title(title, fontsize=20)
+def save_correlation_map(stat, p_values, save_name, title):
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(30, 10))
+    sns.heatmap(stat, annot=True, ax=axes[0])
+    sns.heatmap(p_values, annot=True, ax=axes[1])
+    axes[0].set_title(title + ' - Coefficients', fontsize=20)
+    axes[1].set_title(title + ' - P-values', fontsize=20)
     plt.savefig(save_name, dpi=300, bbox_inches='tight')
 ```
 
-As a result we get two heatmaps, one for Pearson's test and one for Spearman's test.
+As a result we get two heatmaps for both the Pearson and Spearman test.
 
-Inspecting the Pearson's correlation plot of p-values, we can quite clearly see tath BMI is correlating with Pregnanies and DiabetesPedigreeFunction. Basically, we are looking for anything above 0.05; any feature that has a p-value for correlation with another feature above 0.05 is found to be insignificantly different from the other feature.
+Inspecting the Pearson's correlation plot of p-values, we can quite clearly see that Age is correlating heavily with the number of Pregnancies, as would be expected. Any feature that has a p-value for another feature above 0.05 is deemed as uncorrelated with that feature - so, inspecting the feature correlation between OldOverweight and SkinThickness reveals a coefficient of -0.03 and a p-value of 0.4, meaning that they are statistically significant from each other.
 
 ![](images/heatmap_pearson.png)
-Pearson's correlation coefficient on the diabetes dataset.
+This is Pearson's correlation test on the diabetes dataset. On the left hand, the coefficients are plotted to show the coefficient from -1 to 1, where 0 means no implied correlation. On the right hand, p-values for features *not* being correlated are plotted.
 
-Inspecting Spearman's correlation, much of the same story is told, except for a few new features that are tremendously correlated with other features. Insulin and the constructed feature OldOverweight has an incredibly high p-value while the BMI and Pregnancies features increased to a p-value of 1. BloodPressure and Insulin also has a very large p-value.
+Inspecting Spearman's correlation, much of the same story is told. Insulin and the constructed feature OldOverweight has an incredibly high p-value while the BMI and Pregnancies features increased to a p-value of 1. BloodPressure and Insulin also has a very large p-value. This means these feature are uncorrelated with each other.
 
 ![](images/heatmap_spearman.png)
-Spearman's correlation coefficient on the diabetes dataset.
+This is Spearman's correlation test on the diabetes dataset. On the left hand, the coefficients are plotted to show the coefficient from -1 to 1, where 0 means no implied correlation. On the right hand, p-values for features *not* being correlated are plotted.
 
-On a final note on correlation; making intuitive sense of a dataset is not always as easy as with our dataset for this article. We can quite clearly see that BMI and Pregnancies follow eachother linearly and monotonically - as expected. However, if you are working with sensor data where you cannot put your intuition on top quickly, then this becomes a tool to help you understand the sensor data faster.
+Using this information, we can actually construct models that perform the better than if we use all available features. We know that Age, Outcome, and OldOverweight are greatly correlated with Pregnancies, so we can choose these features for a linear regression model. This is easily shown by our example below:
+
+```python
+def pregnancy_prediction(df):
+    y_feature = 'Pregnancies'
+    x_features = ['Age', 'Outcome', 'OldOverweight']
+    model.linear_regression_model(df, x_features, y_feature)
+
+    x_features = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin',
+       'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome', 'OldOverweight']
+    model.linear_regression_model(df, x_features, y_feature)
+```
+
+We train linear regression models using these features and calculate the R-squared metric on the test set.
+
+```python
+def data_split(df, x_features, y_feature):
+    X_train = df.loc[:, x_features]
+    y_train = df.loc[:, y_feature]
+
+    return train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+
+
+def linear_regression_model(df, x_features, y_feature):
+    X_train, X_test, y_train, y_test = data_split(df, x_features, y_feature)
+
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+    pred = model.predict(X_test)
+    r2 = r2_score(y_test, pred)
+
+    print(f'Linear Regression R^2: {r2}')
+```
+
+The outcome for our program is an R-squared of 0.3397 when only using Age, Outcome, and OldOverweight, and there is a very slight increase in the R-squared value to 0.3468 when using all the available features. This goes to show that we can make our models incredibly simple while keeping the best possible R-squared score.
 
 ### Finding a cutoff point
 Perhaps this is what I have found most useful in my work. It is almost like a statistical way of finding outliers that does not require you to train a model. Using clustering algorithms can also help, but they add additional complexity which we do not need.
