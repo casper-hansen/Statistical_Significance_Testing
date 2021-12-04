@@ -114,9 +114,14 @@ On a final note on correlation; making intuitive sense of a dataset is not alway
 ### Finding a cutoff point
 Perhaps this is what I have found most useful in my work. It is almost like a statistical way of finding outliers that does not require you to train a model. Using clustering algorithms can also help, but they add additional complexity which we do not need.
 
-Levene's test vs ANOVA
+#### Setting up the example
+
+This will be the most complicated real-life example for this article. We will use a new dataset which I created using Paint with some company name or logo, a section heading, and a body of text. The idea is that they all have similar features, but we want to be able to tell which is a section heading using computer vision methods and a statistical test to help identify the outlier.
 
 ![](images/bold_text_test.png)
+The example text created for calculating boldness on every line.
+
+Now, let's say we open the images individually using OpenCV and then call a compute thickness function to get a value for the boldness of the text. We then print the values and inspect them.
 
 ```python
 def bold_text():
@@ -128,11 +133,64 @@ def bold_text():
     bold2 = model.compute_thickness(img2)
     bold3 = model.compute_thickness(img3)
 
-    rng = np.random.RandomState(42)
-    a_ton_of_text_boldness = rng.uniform(low=0.7, high=2.5, size=200)
-    np.append(a_ton_of_text_boldness, [bold1, bold2])
-
-    stat, p = levene(a_ton_of_text_boldness, [bold1, bold2], center='mean')
     print(bold1, bold2, bold3)
-    print(f'{p:5f}')
+
+    significance.boldness_test(bold1, bold2, bold3)
 ```
+
+For the logo, we get a boldness value of 13.21, while the section heading gets 4.47, and the body of text gets 2.28. This means we have detected that the boldness of the logo is much larger than just the section heading. 
+
+```python
+def compute_thickness(img):
+    # White to black pixels and black to white pixels
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    inverted = cv2.bitwise_not(img)
+
+    # select from text start x,y to text end x,y
+    white_pt_coords=np.argwhere(inverted)
+    min_y = min(white_pt_coords[:,0])
+    min_x = min(white_pt_coords[:,1])
+    max_y = max(white_pt_coords[:,0])
+    max_x = max(white_pt_coords[:,1])
+    inverted = inverted[min_y:max_y,min_x:max_x]
+
+    # thin image and calculate difference from the inverted image
+    thinned = cv2.ximgproc.thinning(inverted)
+    return (np.sum(inverted == 255) - np.sum(thinned == 255)) / np.sum(thinned == 255)
+```
+
+Visually, the following is what happens to an image. We can see that the background becomes black and the text becomes white when inverted. The reason for this process is to count the number of white pixels before and after thinning the text. Then we can measure the difference in white pixels between the inverted and thinned image, and therefore calculate a boldness value.
+
+![](images/text_to_thinned.png)
+Upper: The normal image. Middle: The inverted image. Lower: The thinned image.
+
+You might not think this is a problem (at first), but we need to decide a common threshold value level to decide when we have identified a section or body text. This is useful for segmenting and analyzing papers by identifying every section and looking into the body and analyzing that specific part after applying OCR.
+
+To decide on a threshold, we should normalize our boldness values, so that they are between 0 and 1. This is quite trivial, but if we had multiple section headings in a paper, the boldness value would differ slightly from article to article. Therefore, we need to filter out the values that have too large of a variance from a series of boldness values. 
+
+#### Applying the tests
+
+The most well-known is the analysis of variance (ANOVA) test, and a less well-known test is Levene's test. To construct an example, we use the boldness of the section to generate 200 random values from 0.7 to the boldness value + another 0.5 to account for other section headings that could have larger boldness values. The assumption is that some of the text will have small boldness values, therefore we use a small value to set the lowest number for the distribution generation.
+
+We want to cross-check whether the distribution we created, which supposedly contains boldness values from a random body of text and multiple headings. For Levene's test, this means we pair boldness values with eachother with the assumption that they fit into the distribution. If we introduce too large of a boldness value, then we can use these tests to exclude that value.
+
+```python
+def boldness_test(bold1, bold2, bold3):
+    rng = np.random.RandomState(42)
+    a_ton_of_text_boldness = rng.uniform(low=0.7, high=bold2 + 0.5, size=200)
+
+    variance_check = [[bold1, bold2], [bold2, bold3]]
+
+    for check in variance_check:
+        stat1, p1 = levene(a_ton_of_text_boldness, check, center='mean')
+        stat2, p2 = f_oneway(a_ton_of_text_boldness, check)
+
+        print(f'{p1:5f}')
+        print(f'{p2:5f}')
+```
+
+In our example, the first array containing bold1 and bold2 gets a p-value of 0 for both tests - which is to be expected, because they both fall into the distribution. However, the case is different when we pair bold2 and bold3. We get the p-values 0.98 for Levene's test and 0.50 for the ANOVA test.
+
+The interpretation is that we first checked the bold1 and bold2 pair, which ran into no issues of being statistically significant from the distribution. In a sense, this means that both these values are "cleared". But when we introduce bold3 into a pair with bold2, we observe that the boldness value array is statistically significant from the distribution. Since we introduced bold3, it means that this value is the odd one out - the one to remove from our dataset.
+
+After removing bold3 from our dataset, we go and standardize the values and can apply a threshold value. For example, one could apply a threshold value at 0.65 and a rule saying: *anything above the threshold is a section heading*. 

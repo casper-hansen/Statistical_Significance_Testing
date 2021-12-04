@@ -20,7 +20,7 @@ def correlation_test(df):
 
 def boldness_test(bold1, bold2, bold3):
     rng = np.random.RandomState(42)
-    a_ton_of_text_boldness = rng.uniform(low=0.7, high=2.5, size=200)
+    a_ton_of_text_boldness = rng.uniform(low=0.7, high=bold2 + 0.5, size=200)
 
     variance_check = [[bold1, bold2], [bold2, bold3]]
 
