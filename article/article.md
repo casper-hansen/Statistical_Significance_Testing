@@ -2,21 +2,21 @@
 
 Author: Casper Hansen
 
-There is one essential question we are trying to answer with a statistical test: Are a set of values different from another set of values? In practice, it is used when you have one dataset that you can form hypotheses from, and you have another dataset that you can check your hypotheses against. However, a statistical significance test can only tell you *IF* and not *how* different the datasets are.
+There is one essential question we are trying to answer with a statistical test: Are a set of values different from some assumption about these values? In practice, it is used when you have one dataset that you can form hypotheses from, and you have another dataset that you can check your hypotheses against. However, a statistical significance test can only tell you *IF* and not *how* different the datasets are.
 
 ## Hypotheses & P-values
 
-To formulate and test a hypothesis, we have to understand the goal we are trying to achieve when formulating one. The most common hypothesis is the null-hypothesis or $H_0$, which is a confusing name. In the null-hypothesis, we are trying to prove that a common fact is true by stating the opposite. In formal terms, we are trying to reject or nullify the null-hypothesis.
+To formulate and test a hypothesis, we have to understand the goal we are trying to achieve when formulating one. The most common hypothesis is the null-hypothesis or H<sub>0</sub>, which is a confusing name. In the null-hypothesis, we are trying to prove that a common fact is true by stating the opposite. In formal terms, we are trying to reject or nullify the null-hypothesis.
 
-For example, you could imagine the datasets behind these hypotheses is from an exam where students are categorized into non-math, math, and math and programming students. Then you separate them into three different datasets to form the basis of your hypothesis testing:
-- $H_0$ (Null-hypothesis): Math is not important to understand algorithms in data science.
-- $H_1$ (Alternative hypothesis): A sufficient level of math is needed to understand algorithms in data science.
+For example, you could imagine the datasets behind these hypotheses are from an exam where students are categorized into non-math, math, and math and programming students. Then you separate them into three different datasets to form the basis of your hypothesis testing:
+- H<sub>0</sub> (Null-hypothesis): Math is not important to understand algorithms in data science.
+- H<sub>1</sub> (Alternative hypothesis): A sufficient level of math is needed to understand algorithms in data science.
 
-This is just two hypotheses, but do note that we can create a long series $H_0$ through $H_n$ to test for common facts. One might believe that you could have a $H_2$ that says:
+These are just two hypotheses, but do note that we can create a long series H<sub>0</sub> through H<sub>n</sub> to test for common facts. One might believe that you could have a H<sub>2</sub> that says:
 
-- $H_2$: A sufficient level of math and programming skills are needed to understand algorithms in data science.
+- H<sub>2</sub>: A sufficient level of math and programming skills is needed to understand algorithms in data science.
 
-Once we get to a hypothesis that we cannot reject, we accept that hypothesis to be true and thus statistically significantly different. So, when we accept a hypothesis, it means that the dataset used is significantly different due to something else than chance.
+Once we get to a hypothesis that we cannot reject, we accept that hypothesis to be true and thus some values in a dataset are proven to be statistically significantly different. So, when we accept a hypothesis, it means that the dataset used is significantly different due to something else than chance.
 
 Now, you might wonder, when do we reject or accept a hypothesis? We use a statistical test. There are [tens of different tests](https://docs.scipy.org/doc/scipy/reference/stats.html#statistical-tests) that are used for different purposes, but there is one universal component to all of the tests: they all generate a P-value. The significance level can be observed from the table below; if the P-value is greater than 0.05, then we usually reject a hypothesis, and we accept a hypothesis with a P-value below 0.05.
 
@@ -39,12 +39,12 @@ df["OldOverweight"] = df.apply(lambda x: True if x.Age >= 50 and x.BMI >= 25.0 e
 ```
 
 ### Determining the distribution
-Many statistical tests have a series of assumptions. One of the most common assumption is that the data being tested follow a Gaussian distribution (also known as a normal distribution or test for normality). Therefore, it would not make much sense to use those tests on the data that do not follow a Gaussian distribution - so, this is the first test.
+Many statistical tests have a series of assumptions. One of the most common assumptions is that the data being tested follow a Gaussian distribution (also known as a normal distribution or test for normality). Therefore, it would not make much sense to use those tests on the data that do not follow a Gaussian distribution - so, this is the first test.
 
 ![](images/gaussian.png)
-A Gaussian distribution where $\mu$ is the mean and $\sigma$ is the standard deviation. In the Gaussian distribution, 68.26% of data falls within one standard deviation from the mean. [Image source](https://towardsdatascience.com/understanding-the-68-95-99-7-rule-for-a-normal-distribution-b7b7cbf760c2).
+A Gaussian distribution where μ is the mean and σ is the standard deviation. In the Gaussian distribution, 68.26% of data falls within one standard deviation from the mean. [Image source](https://towardsdatascience.com/understanding-the-68-95-99-7-rule-for-a-normal-distribution-b7b7cbf760c2).
 
-We will work with SciPy as the main package for the implementation of the statistical tests for normality. The API makes it simple and fast to perform these statistical tests. In the code snippet below, we make use of two different normality tests - Shapiro-Wilk and D'Agostino:
+The H<sub>0</sub> for the dataset is that all features are *not* normally distributed - and H<sub>1</sub> is the opposite. We will work with SciPy as the main package for the implementation of the statistical tests for normality. The API makes it simple and fast to perform these statistical tests. In the code snippet below, we make use of two different normality tests - Shapiro-Wilk and D'Agostino:
 
 ```python
 def gaussian_test(col, values):
@@ -54,7 +54,7 @@ def gaussian_test(col, values):
     print(f"Gaussian: {col}\n\t{p1:5f} (Shapiro-Wilk)\n\t{p2:5f} (D'Agostino's)")
 ```
 
-You can run through every column and check the if the values fit into a Gaussian distribution. I found that all the p-values for the Shapiro-Wilk test were zero - suggesting that the every column is normally distributed. Applying the D'Agostino test, the result is largely the same except for a few columns that got close to the 0.001 significance level. This can be observed by the output of the function:
+You can run through every column and check if the values fit into a Gaussian distribution. I found that all the p-values for the Shapiro-Wilk test were zero - suggesting that every column is normally distributed. Applying the D'Agostino test, the result is largely the same except for a few columns that got close to the 0.001 significance level. This can be observed by the output of the function:
 
 ```
 Gaussian: Glucose
@@ -65,14 +65,16 @@ Gaussian: SkinThickness
         0.000171 (D'Agostino's)
 ```
 
-This means all the data pass the requirements of being normally distributed since no feature had a p-value above the significance level at 0.05. Furthermore, this means we can use *parametric tests* like T tests and Pearson's Correlation Coefficient. This does not mean we cannot use non-parametric tests - these tests are distribution-free. See [this page](https://www.ibm.com/docs/en/db2woc?topic=procedures-statistics-parametric-nonparametric) for more information about parametric and non-parametric tests.
+This means all the data pass the requirements of being normally distributed since no feature had a p-value above the significance level at 0.05. Furthermore, this means we can use *parametric tests* like T-tests and Pearson's Correlation Coefficient. This does not mean we cannot use non-parametric tests - these tests are distribution-free. See [this page](https://www.ibm.com/docs/en/db2woc?topic=procedures-statistics-parametric-nonparametric) for more information about parametric and non-parametric tests.
 
 ### Checking for redundancy
 The amount of correlation in your dataset can sometimes be hard to comprehend. You can check which features are redundant by applying correlation tests.
 
 **Pearson's test**: We are testing whether two features have a linear relationship - meaning that if feature X increases or decreases by a value Z, then Y increases or decreases just as much as X. 
 
-**Spearman's test**: We are testing whether two features have a monotonic relationship - meaning when feature X changes in a positive or negative direction, so does feature Y, but not necessarily by the same value. For example, if feature X is decreasing by -1.5 while feature Y is decreasing with -0.2.
+**Spearman's test**: We are testing whether two features have a monotonic relationship - meaning when feature X changes in a positive or negative direction, so do feature Y, but not necessarily by the same value. For example, if feature X is decreasing by -1.5, feature Y could be decreasing by -0.2.
+
+For this dataset, we can have an idea about the correlation, For example, the number of pregnancies is expected to be larger if you are 40 years old than if you are 18 years old. To this extent, we would make a qualified guess that H<sub>0</sub> states that no feature correlates with another feature - and H<sub>1</sub> says that there are features that indeed are correlated.
 
 When executing our script to check Pearson's Correlation Coefficient and Spearman's rank correlation coefficient, we apply the `stats.pearsonr` and `stats.spearmanr` methods from SciPy. We can execute both methods by the function below. In return, we get the coefficients and P-values for the correlation test on every feature combination:
 
@@ -108,12 +110,12 @@ Inspecting the Pearson's correlation plot of p-values, we can quite clearly see 
 ![](images/heatmap_pearson.png)
 This is Pearson's correlation test on the diabetes dataset. On the left hand, the coefficients are plotted to show the coefficient from -1 to 1, where 0 means no implied correlation. On the right hand, p-values for features *not* being correlated are plotted.
 
-Inspecting Spearman's correlation, much of the same story is told. Insulin and the constructed feature OldOverweight has an incredibly high p-value while the BMI and Pregnancies features increased to a p-value of 1. BloodPressure and Insulin also has a very large p-value. This means these feature are uncorrelated with each other.
+Inspecting Spearman's correlation, much of the same story is told. Insulin and the constructed feature OldOverweight have an incredibly high p-value while the BMI and Pregnancies features increased to a p-value of 1. BloodPressure and Insulin also have a very large p-value. This means these features are uncorrelated with each other.
 
 ![](images/heatmap_spearman.png)
 This is Spearman's correlation test on the diabetes dataset. On the left hand, the coefficients are plotted to show the coefficient from -1 to 1, where 0 means no implied correlation. On the right hand, p-values for features *not* being correlated are plotted.
 
-Using this information, we can actually construct models that perform the better than if we use all available features. We know that Age, Outcome, and OldOverweight are greatly correlated with Pregnancies, so we can choose these features for a linear regression model. This is easily shown by our example below:
+Using this information, we can construct models that perform better than if we use all available features. We know that Age, Outcome, and OldOverweight are greatly correlated with Pregnancies, so we can choose these features for a linear regression model. This is easily shown by our example below:
 
 ```python
 def pregnancy_prediction(df):
@@ -150,11 +152,11 @@ def linear_regression_model(df, x_features, y_feature):
 The outcome for our program is an R-squared of 0.3397 when only using Age, Outcome, and OldOverweight, and there is a very slight increase in the R-squared value to 0.3468 when using all the available features. This goes to show that we can make our models incredibly simple while keeping the best possible R-squared score.
 
 ### Finding a cutoff point
-Perhaps this is what I have found most useful in my work. It is almost like a statistical way of finding outliers that does not require you to train a model. Using clustering algorithms can also help, but they add additional complexity which we do not need.
+Perhaps this is what I have found most useful in my work. It is almost like a statistical way of finding outliers that do not require you to train a model. Using clustering algorithms can also help, but they add additional complexity which we do not need.
 
 #### Setting up the example
 
-This will be the most complicated real-life example for this article. We will use a new dataset which I created using Paint with some company name or logo, a section heading, and a body of text. The idea is that they all have similar features, but we want to be able to tell which is a section heading using computer vision methods and a statistical test to help identify the outlier.
+This will be the most complicated real-life example for this article. We will use a new dataset that I created using Paint with some company name or logo, a section heading, and a body of text. The idea is that they all have similar features, but we want to be able to tell which is a section heading using computer vision methods and a statistical test to help identify the outlier.
 
 ![](images/bold_text_test.png)
 The example text created for calculating boldness on every line.
@@ -208,9 +210,11 @@ To decide on a threshold, we should normalize our boldness values, so that they 
 
 #### Applying the tests
 
-The most well-known is the analysis of variance (ANOVA) test, and a less well-known test is Levene's test. To construct an example, we use the boldness of the section to generate 200 random values from 0.7 to the boldness value + another 0.5 to account for other section headings that could have larger boldness values. The assumption is that some of the text will have small boldness values, therefore we use a small value to set the lowest number for the distribution generation.
+The most well-known is the analysis of variance (ANOVA) test, and a less well-known test is Levene's test. To construct an example, we use the boldness of the section to generate 200 random values from 0.7 to the boldness value + another 0.5 to account for other section headings that could have larger boldness values. The assumption is that some of the text will have small boldness values, therefore we use a small value to set the lowest number for the generation of the distribution.
 
-We want to cross-check whether the distribution we created, which supposedly contains boldness values from a random body of text and multiple headings. For Levene's test, this means we pair boldness values with eachother with the assumption that they fit into the distribution. If we introduce too large of a boldness value, then we can use these tests to exclude that value.
+We have a hunch about the fact that the logo, title, or company are bolder than a section heading, so for our dataset, the H<sub>0</sub> is that the company name is just as bold as the section headings - while, of course, the opposite is true for H<sub>1</hub>.
+
+We want to cross-check whether the distribution we created, which supposedly contains boldness values from a random body of text and multiple headings. For Levene's test, this means we pair boldness values with each other with the assumption that they fit into the distribution. If we introduce too large of a boldness value, then we can use these tests to exclude that value.
 
 ```python
 def boldness_test(bold1, bold2, bold3):
