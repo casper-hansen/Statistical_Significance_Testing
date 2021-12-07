@@ -236,3 +236,7 @@ In our example, the first array containing bold1 and bold2 gets a p-value of 0 f
 The interpretation is that we first checked the bold1 and bold2 pair, which ran into no issues of being statistically significant from the distribution. In a sense, this means that both these values are "cleared". But when we introduce bold3 into a pair with bold2, we observe that the boldness value array is statistically significant from the distribution. Since we introduced bold3, it means that this value is the odd one out - the one to remove from our dataset.
 
 After removing bold3 from our dataset, we go and standardize the values and can apply a threshold value. For example, one could apply a threshold value at 0.65 and a rule saying: *anything above the threshold is a section heading*. 
+
+## Conclusion
+
+These statistical tests are important to have in your toolbox so that you can analyze data and solve real-world problems. We have now seen how multiple statistical tests can be of use in practical scenarios. You have gotten an introduction on p-values, hypotheses, and subsequently now seen them applied to datasets. In the future, you should be able to do the visualizations and implement a statistical test on your exact dataset.
